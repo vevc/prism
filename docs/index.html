@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prism · 签名计算器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0c1210;
+      --bg-1: #121a17;
+      --ink: #e8f0eb;
+      --muted: #8a9a91;
+      --line: #24302a;
+      --accent: #3dd68c;
+      --accent-dim: rgba(61, 214, 140, 0.14);
+      --warn: #e8b86d;
+      --danger: #e07a7a;
+      --radius: 10px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(61, 214, 140, 0.12), transparent 55%),
+        radial-gradient(700px 400px at 100% 0%, rgba(90, 140, 200, 0.08), transparent 50%),
+        linear-gradient(165deg, var(--bg-0), var(--bg-1) 60%, #0e1512);
+    }
+
+    main {
+      width: min(520px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 3.5rem 0 4rem;
+    }
+
+    .brand {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 0.75rem;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(1.6rem, 4vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .lead {
+      margin: 0 0 2rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    form {
+      display: grid;
+      gap: 1.1rem;
+    }
+
+    label {
+      display: grid;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input::placeholder { color: #5a6b62; }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .hint {
+      font-family: var(--font);
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #6b7c73;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.25rem;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.7rem 1.15rem;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s, background 0.15s, opacity 0.15s;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    .primary {
+      background: var(--accent);
+      color: #06140c;
+    }
+
+    .primary:hover { background: #4ae49a; }
+
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .ghost:hover {
+      color: var(--ink);
+      border-color: #3a4a42;
+    }
+
+    .result {
+      margin-top: 1.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+      display: none;
+    }
+
+    .result.visible { display: block; }
+
+    .result h2 {
+      margin: 0 0 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .copy {
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .copy:hover { color: var(--accent); border-color: var(--accent); }
+
+    .value {
+      word-break: break-all;
+      padding: 0.75rem 0.9rem;
+      border-radius: var(--radius);
+      background: rgba(61, 214, 140, 0.06);
+      border: 1px solid rgba(61, 214, 140, 0.22);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--accent);
+    }
+
+    .status {
+      margin-top: 1rem;
+      min-height: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--warn);
+    }
+
+    .status.error { color: var(--danger); }
+    .status.ok { color: var(--accent); }
+
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #5a6b62;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">Prism</p>
+    <h1>签名计算器</h1>
+    <p class="lead">
+      在本地用 HMAC-SHA256 计算代理所需的签名 <code>t</code>。
+      密钥不会上传，仅在你的浏览器中运算。
+    </p>
+
+    <form id="form" autocomplete="off">
+      <label>
+        目标域名 <span class="hint">参数 d</span>
+        <input
+          id="domain"
+          name="domain"
+          type="text"
+          spellcheck="false"
+          placeholder="api.example.com"
+          required
+        />
+      </label>
+
+      <label>
+        密钥 <span class="hint">与 Worker 中 SECRET_KEY 一致</span>
+        <input
+          id="secret"
+          name="secret"
+          type="password"
+          spellcheck="false"
+          placeholder="your secret key"
+          required
+        />
+      </label>
+
+      <label>
+        代理入口（可选）<span class="hint">用于拼完整 URL</span>
+        <input
+          id="proxy"
+          name="proxy"
+          type="url"
+          spellcheck="false"
+          placeholder="https://your-worker.example.com/"
+        />
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="primary">计算签名</button>
+        <button type="button" class="ghost" id="toggleSecret">显示密钥</button>
+      </div>
+    </form>
+
+    <p class="status" id="status" role="status"></p>
+
+    <section class="result" id="result" aria-live="polite">
+      <h2>结果</h2>
+      <div class="field">
+        <div class="field-label">
+          <span>签名 t</span>
+          <button type="button" class="copy" data-copy="token">复制</button>
+        </div>
+        <div class="value" id="token"></div>
+      </div>
+      <div class="field" id="urlField" hidden>
+        <div class="field-label">
+          <span>完整代理 URL</span>
+          <button type="button" class="copy" data-copy="fullUrl">复制</button>
+        </div>
+        <div class="value" id="fullUrl"></div>
+      </div>
+    </section>
+
+    <footer>
+      算法与 Worker 一致：HMAC-SHA256(key = SECRET_KEY, message = 域名)，输出为 hex。
+    </footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("form");
+    const domainInput = document.getElementById("domain");
+    const secretInput = document.getElementById("secret");
+    const proxyInput = document.getElementById("proxy");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const tokenEl = document.getElementById("token");
+    const fullUrlEl = document.getElementById("fullUrl");
+    const urlField = document.getElementById("urlField");
+    const toggleSecret = document.getElementById("toggleSecret");
+
+    function setStatus(message, type = "") {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    async function signHMAC(message, secretStr) {
+      const encoder = new TextEncoder();
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(secretStr),
+        { name: "HMAC", hash: { name: "SHA-256" } },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign(
+        "HMAC",
+        cryptoKey,
+        encoder.encode(message)
+      );
+      return [...new Uint8Array(signature)]
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function buildProxyUrl(base, domain, token) {
+      const url = new URL(base);
+      url.searchParams.set("d", domain);
+      url.searchParams.set("t", token);
+      return url.toString();
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const domain = domainInput.value.trim();
+      const secret = secretInput.value;
+      const proxy = proxyInput.value.trim();
+
+      if (!domain || !secret) {
+        setStatus("请填写目标域名和密钥。", "error");
+        resultEl.classList.remove("visible");
+        return;
+      }
+
+      if (!window.crypto?.subtle) {
+        setStatus("当前环境不支持 Web Crypto，请通过 HTTPS 或 localhost 访问。", "error");
+        resultEl.classList.remove("visible");
+        return;
+      }
+
+      try {
+        setStatus("计算中…");
+        const token = await signHMAC(domain, secret);
+        tokenEl.textContent = token;
+
+        if (proxy) {
+          try {
+            fullUrlEl.textContent = buildProxyUrl(proxy, domain, token);
+            urlField.hidden = false;
+          } catch {
+            urlField.hidden = true;
+            setStatus("签名已算出，但代理入口不是合法 URL。", "error");
+            resultEl.classList.add("visible");
+            return;
+          }
+        } else {
+          urlField.hidden = true;
+        }
+
+        resultEl.classList.add("visible");
+        setStatus("计算完成。密钥未离开本机。", "ok");
+      } catch (err) {
+        resultEl.classList.remove("visible");
+        setStatus("计算失败：" + (err?.message || String(err)), "error");
+      }
+    });
+
+    toggleSecret.addEventListener("click", () => {
+      const show = secretInput.type === "password";
+      secretInput.type = show ? "text" : "password";
+      toggleSecret.textContent = show ? "隐藏密钥" : "显示密钥";
+    });
+
+    document.querySelectorAll("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-copy");
+        const text = document.getElementById(id)?.textContent?.trim();
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          const prev = btn.textContent;
+          btn.textContent = "已复制";
+          setTimeout(() => { btn.textContent = prev; }, 1200);
+        } catch {
+          setStatus("复制失败，请手动选中文本。", "error");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
