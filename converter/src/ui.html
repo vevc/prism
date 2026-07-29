@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prism · 订阅转换</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0c1210;
+      --bg-1: #121a17;
+      --ink: #e8f0eb;
+      --muted: #8a9a91;
+      --line: #24302a;
+      --accent: #3dd68c;
+      --accent-dim: rgba(61,214,140,.14);
+      --warn: #e8b86d;
+      --danger: #e07a7a;
+      --radius: 10px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh;
+      font-family: var(--font); color: var(--ink);
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(61,214,140,.12), transparent 55%),
+        radial-gradient(700px 400px at 100% 0%, rgba(90,140,200,.08), transparent 50%),
+        linear-gradient(165deg, var(--bg-0), var(--bg-1) 60%, #0e1512);
+    }
+    main { width: min(640px, calc(100% - 2rem)); margin: 0 auto; padding: 3rem 0 4rem; }
+    .brand { font-size: .75rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 .75rem; }
+    h1 { margin: 0 0 .5rem; font-size: clamp(1.5rem,4vw,1.9rem); font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+    .lead { margin: 0 0 2rem; color: var(--muted); font-size: .92rem; line-height: 1.55; }
+    .lead code { font-family: var(--mono); font-size: .82rem; background: rgba(255,255,255,.06); padding: .1em .35em; border-radius: 4px; }
+
+    label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 500; color: var(--muted); }
+    textarea, input {
+      width: 100%; padding: .75rem .9rem;
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: rgba(0,0,0,.28); color: var(--ink);
+      font-family: var(--mono); font-size: .82rem;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      resize: vertical;
+    }
+    textarea::placeholder, input::placeholder { color: #5a6b62; }
+    textarea:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+
+    .hint { font-family: var(--font); font-size: .75rem; font-weight: 400; color: #6b7c73; }
+
+    .form-grid { display: grid; gap: 1.1rem; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .25rem; }
+    button {
+      appearance: none; border: none; border-radius: var(--radius);
+      padding: .7rem 1.15rem; font-family: var(--font); font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: transform .12s, background .15s, opacity .15s;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .primary { background: var(--accent); color: #06140c; }
+    .primary:hover:not(:disabled) { background: #4ae49a; }
+    .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+    .ghost:hover:not(:disabled) { color: var(--ink); border-color: #3a4a42; }
+
+    .status { margin-top: 1rem; min-height: 1.25rem; font-size: .85rem; color: var(--warn); }
+    .status.error { color: var(--danger); }
+    .status.ok { color: var(--accent); }
+
+    .result { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--line); display: none; }
+    .result.visible { display: block; }
+    .result h2 { margin: 0 0 .85rem; font-size: .75rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+    .field { margin-bottom: 1rem; }
+    .field-label { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; font-size: .8rem; color: var(--muted); }
+
+    .copy-btn {
+      padding: .2rem .55rem; font-size: .72rem; font-weight: 500;
+      border-radius: 6px; border: 1px solid var(--line);
+      background: transparent; color: var(--muted);
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    .value {
+      word-break: break-all; padding: .75rem .9rem; border-radius: var(--radius);
+      background: rgba(61,214,140,.06); border: 1px solid rgba(61,214,140,.22);
+      font-family: var(--mono); font-size: .78rem; line-height: 1.6; color: var(--accent);
+      white-space: pre-wrap;
+    }
+
+    .warning-list { margin: .5rem 0 0; padding: 0; list-style: none; }
+    .warning-list li { padding: .35rem .6rem; margin-bottom: .35rem; font-size: .82rem; color: var(--warn); background: rgba(232,184,109,.08); border-radius: 6px; border-left: 3px solid var(--warn); }
+    .warning-list li code { font-family: var(--mono); font-size: .78rem; }
+
+    footer { margin-top: 2.5rem; font-size: .75rem; color: #5a6b62; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="brand">Prism</p>
+  <h1>订阅转换</h1>
+  <p class="lead">
+    输入 <code>vless://</code> 链接（每行一条，或粘贴 base64 编码的订阅内容），
+    自动通过代理重写为新的订阅链接。UUID 不会发送到服务器。
+  </p>
+
+  <div class="form-grid">
+    <label>
+      订阅链接
+      <textarea id="input" rows="6" placeholder="vless://uuid@domain:443?...#name&#10;vless://uuid@domain2:443?...#name2&#10;&#10;也支持粘贴 base64 编码的订阅内容"></textarea>
+    </label>
+
+    <div id="warnings"></div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="convertBtn">转换</button>
+      <button type="button" class="ghost" id="clearBtn">清空</button>
+    </div>
+  </div>
+
+  <p class="status" id="status" role="status"></p>
+
+  <section class="result" id="result" aria-live="polite">
+    <h2>转换结果</h2>
+    <div class="field">
+      <div class="field-label">
+        <span>明文链接</span>
+        <button type="button" class="copy-btn" id="copyBtn">复制</button>
+      </div>
+      <div class="value" id="output"></div>
+    </div>
+  </section>
+
+  <footer>
+    UUID 脱敏后提交，服务端仅处理代理参数，不接触任何敏感凭据。
+  </footer>
+</main>
+
+<script>
+const FAKE_UUID = "00000000-1111-2222-3333-445566778899";
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+const WORKER_URL = "WORKER_URL_PLACEHOLDER";
+
+const inputEl = document.getElementById("input");
+const warningsEl = document.getElementById("warnings");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+const outputEl = document.getElementById("output");
+const convertBtn = document.getElementById("convertBtn");
+const clearBtn = document.getElementById("clearBtn");
+const copyBtn = document.getElementById("copyBtn");
+
+function setStatus(msg, type = "") {
+  statusEl.textContent = msg;
+  statusEl.className = "status" + (type ? " " + type : "");
+}
+
+function tryBase64Decode(text) {
+  const trimmed = text.trim();
+  if (!trimmed.includes("://") && /^[A-Za-z0-9+/\r\n]+=*$/.test(trimmed.replace(/\s/g, ""))) {
+    try {
+      return atob(trimmed.replace(/\s/g, ""));
+    } catch { /* not base64 */ }
+  }
+  return text;
+}
+
+function parseInput(raw) {
+  const decoded = tryBase64Decode(raw);
+  const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const vlessLines = [];
+  const skipped = [];
+
+  for (const line of lines) {
+    if (line.startsWith("vless://")) {
+      vlessLines.push(line);
+    } else {
+      const proto = line.match(/^([a-zA-Z0-9]+):\/\//);
+      skipped.push(proto ? proto[1] : "unknown");
+    }
+  }
+  return { vlessLines, skipped };
+}
+
+function maskUUIDs(lines) {
+  const uuidMap = new Map();
+  const masked = lines.map(line => {
+    return line.replace(UUID_RE, (uuid) => {
+      const lower = uuid.toLowerCase();
+      if (!uuidMap.has(lower)) uuidMap.set(lower, uuid);
+      return FAKE_UUID;
+    });
+  });
+  return { masked, uuidMap };
+}
+
+function restoreUUIDs(text, uuidMap) {
+  let result = text;
+  for (const [, original] of uuidMap) {
+    result = result.replaceAll(FAKE_UUID, original);
+  }
+  return result;
+}
+
+function showWarnings(skipped) {
+  if (skipped.length === 0) {
+    warningsEl.innerHTML = "";
+    return;
+  }
+  const counts = {};
+  skipped.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
+  const items = Object.entries(counts)
+    .map(([proto, n]) => `<li>已忽略 ${n} 条 <code>${proto}://</code> 链接（仅支持 vless 协议）</li>`)
+    .join("");
+  warningsEl.innerHTML = `<ul class="warning-list">${items}</ul>`;
+}
+
+convertBtn.addEventListener("click", async () => {
+  const raw = inputEl.value.trim();
+  if (!raw) { setStatus("请输入订阅链接。", "error"); return; }
+
+  const { vlessLines, skipped } = parseInput(raw);
+  showWarnings(skipped);
+
+  if (vlessLines.length === 0) {
+    setStatus("没有可处理的 vless:// 链接。", "error");
+    resultEl.classList.remove("visible");
+    return;
+  }
+
+  const { masked, uuidMap } = maskUUIDs(vlessLines);
+
+  convertBtn.disabled = true;
+  setStatus("转换中…");
+  resultEl.classList.remove("visible");
+
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ links: masked }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`服务端错误 (${resp.status})`);
+    }
+
+    const data = await resp.json();
+    const output = [];
+    const errors = [];
+
+    data.results.forEach((r, i) => {
+      if (r.ok) {
+        output.push(restoreUUIDs(r.converted, uuidMap));
+      } else {
+        errors.push(`第 ${i + 1} 条: ${r.error}`);
+      }
+    });
+
+    if (output.length > 0) {
+      outputEl.textContent = output.join("\n");
+      resultEl.classList.add("visible");
+    }
+
+    if (errors.length > 0) {
+      setStatus(`已转换 ${output.length} 条，${errors.length} 条失败: ${errors.join("; ")}`, output.length > 0 ? "ok" : "error");
+    } else {
+      setStatus(`已成功转换 ${output.length} 条链接。`, "ok");
+    }
+  } catch (err) {
+    setStatus("请求失败: " + (err?.message || String(err)), "error");
+  } finally {
+    convertBtn.disabled = false;
+  }
+});
+
+clearBtn.addEventListener("click", () => {
+  inputEl.value = "";
+  warningsEl.innerHTML = "";
+  resultEl.classList.remove("visible");
+  statusEl.textContent = "";
+});
+
+copyBtn.addEventListener("click", async () => {
+  const text = outputEl.textContent?.trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    const prev = copyBtn.textContent;
+    copyBtn.textContent = "已复制";
+    setTimeout(() => { copyBtn.textContent = prev; }, 1200);
+  } catch {
+    setStatus("复制失败，请手动选中文本。", "error");
+  }
+});
+</script>
+</body>
+</html>
