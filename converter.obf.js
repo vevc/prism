@@ -38,7 +38,7 @@ const HTML = `<!doctype html>
     <div class="title-row"><h2>转换结果</h2><button id="copy">复制</button></div>
     <div class="output" id="output"></div>
   </section>
-  <footer>目标域名和签名由 Worker 在服务端生成；真实 __ID__ 仅在你的浏览器中处理。</footer>
+  <footer>目标域名和签名由 Worker 在服务端生成；真实 __ID__ 仅在你的本地浏览器中处理，请放心使用。</footer>
 </main>
 <script>
 const _s=(...codes)=>String.fromCharCode(...codes);
