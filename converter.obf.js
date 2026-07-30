@@ -2,6 +2,7 @@ const _s = (...codes) => String.fromCharCode(...codes);
 const PROTO = _s(118, 108, 101, 115, 115);
 const PROTO_UP = _s(86, 76, 69, 83, 83);
 const ID_TAG = _s(85, 85, 73, 68);
+const ID_LO = _s(117, 117, 105, 100);
 
 const HTML = `<!doctype html>
 <html lang="zh-CN">
@@ -27,7 +28,7 @@ const HTML = `<!doctype html>
   <h1>__PU__ 订阅转换</h1>
   <p class="lead">粘贴 <code>__PS__</code> 链接（每行一条），或 base64 编码的订阅内容。仅支持 __PU__；__ID__ 会在提交前脱敏，并在转换完成后自动还原。</p>
   <label for="input">订阅链接</label>
-  <textarea id="input" spellcheck="false" placeholder="__PS__xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@example.com:443?encryption=none&security=tls&type=ws&path=%2F#example"></textarea>
+  <textarea id="input" spellcheck="false" placeholder="__PS____IDL__@example.com:443?encryption=none&security=tls&type=ws&path=%2F#example"></textarea>
   <div class="actions">
     <button class="primary" id="convert">转换</button>
     <button id="clear">清空</button>
@@ -38,7 +39,7 @@ const HTML = `<!doctype html>
     <div class="title-row"><h2>转换结果</h2><button id="copy">复制</button></div>
     <div class="output" id="output"></div>
   </section>
-  <footer>目标域名和签名由 Worker 在服务端生成；真实 __ID__ 仅在你的本地浏览器中处理，请放心使用。</footer>
+  <footer>目标域名和签名由 Worker 在服务端生成；真实 __ID__ 仅在本地浏览器中处理，请放心使用。</footer>
 </main>
 <script>
 const _s=(...codes)=>String.fromCharCode(...codes);
@@ -115,6 +116,7 @@ function renderHtml() {
   return HTML
     .replaceAll("__PU__", PROTO_UP)
     .replaceAll("__PS__", PROTO + "://")
+    .replaceAll("__IDL__", ID_LO)
     .replaceAll("__ID__", ID_TAG);
 }
 
